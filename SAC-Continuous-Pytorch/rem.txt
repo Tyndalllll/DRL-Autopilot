@@ -1,0 +1,7 @@
+  self.pos 　3　位置 
+  self.state_pos  self.last_state_pos 6　位置与速度　
+  self.state　无人机各类状态
+  self.new_state  next_state 6 位置与跟目标点的距离
+
+  TODO:
+  
