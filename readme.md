@@ -43,7 +43,7 @@ export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:~/path_to_plugins_files/plugins/build
     2.5000 episodes
         1.env.reset_safe
             每个episode之前的初始化，第一次飞行时，在(0 0 2)起飞，随后每次在范围里随机取一个点，返回一个初始状态
-        2.开始训练　5000个step:(每个step大概0.015s)
+        2.开始训练　5000个step:(每个step大概0.115s)
             1.if replay_buffer.size < 512:  
                 action = env.action_space.sample()
             else:
