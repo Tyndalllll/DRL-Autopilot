@@ -7,7 +7,7 @@ import gym.spaces as spaces
 import gym
 from geometry_msgs.msg import Pose, Twist, TwistStamped
 from gazebo_msgs.msg import ModelStates
-from mavros_msgs.msg import ActuatorOutputsDRL,AttitudeTarget
+from mavros_msgs.msg import AttitudeTarget
 from mavros_msgs.msg import State
 from geometry_msgs.msg import PoseStamped
 from mavros_msgs.srv import SetMode
@@ -28,7 +28,6 @@ log = logging.getLogger(__name__)
 class Gazebo_env():
     def __init__(self, cfg, metric) -> None:
         rospy.init_node('RSMPC', anonymous=True)
-
         # data
         self.state = State()
         
@@ -36,7 +35,7 @@ class Gazebo_env():
         self.arming_req = CommandBool()._request_class()  # CHANGE
         self.set_mode_req = SetMode()._request_class()  # CHANGE
         self.cmd_velocity = TwistStamped()
-        self.cmd_pwm = ActuatorOutputsDRL()
+        #self.cmd_pwm = ActuatorOutputsDRL()
         self.cmd_att = AttitudeTarget()
         self.local_gazebo = ModelStates()
         self.local_vrpn = PoseStamped()
@@ -128,8 +127,7 @@ class Gazebo_env():
 
         # Publisher
         # self.local_pos_pub = rospy.Publisher('mavros/setpoint_position/local', PoseStamped, queue_size=10)
-        self.pwm_pub = rospy.Publisher(
-            'mavros/actuator_outputs_drl/actuator_sub', ActuatorOutputsDRL, queue_size=1)
+        #self.pwm_pub = rospy.Publisher('mavros/actuator_outputs_drl/actuator_sub', ActuatorOutputsDRL, queue_size=1)
         self.vel_pub = rospy.Publisher(
             'mavros/setpoint_velocity/cmd_vel', TwistStamped, queue_size=1)
         self.pos_pub = rospy.Publisher(
@@ -418,22 +416,24 @@ class Gazebo_env():
         # if self.state_pos[0]<=self.pos_x_low-1 or self.state_pos[0]>=self.pos_x_high+1 or self.state_pos[1]<=self.pos_y_low-1 or self.state_pos[1]>=self.pos_y_high+1 or self.state_pos[2]<=self.pos_z_low-0.4 or self.state_pos[2]>=self.pos_z_high+1:
         #     rew = rew - 500
         #     self.region_out = True
-
-        for i in abs(self.now_angle):
-            if i > 0.4:
-                print("drone will clash,attitude is:",self.now_angle)
-                rew =rew - 300
-                break
+        if action[3] <0.3:
+            rew= rew - 18
         if dist < 0.3: # type: ignore
             rew = rew + 6
             print("dist less 0.3")
             if dist <0.1: # type: ignore
-                rew = rew + 14
+                rew = rew + 18
                 print("dist less 0.1")
                 self.success_count+=1
             if self.success_count>=10:
                 self.success_flag = True
                 rew +=300
+        for i in abs(self.now_angle):
+            if i > 0.4:
+                print("drone will clash,attitude is:",self.now_angle)
+                rew =rew - 300
+                self.region_out = True
+                break
         """ if self.new_state[0]<=self.pos_x_low or self.new_state[0]>=self.pos_x_high or self.new_state[1]<=self.pos_y_low or self.new_state[1]>=self.pos_y_high or self.new_state[2]<=self.pos_z_low or self.new_state[2]>=self.pos_z_high:
             print(f"When out, pos is {self.new_state[0:3]}") """
         if self.state_pos[0]<=self.pos_x_low or self.state_pos[0]>=self.pos_x_high or self.state_pos[1]<=self.pos_y_low or self.state_pos[1]>=self.pos_y_high or self.state_pos[2]<=self.pos_z_low or self.state_pos[2]>=self.pos_z_high:
@@ -442,9 +442,9 @@ class Gazebo_env():
             self.region_out = True
         # print(rew)
         rew = rew/6
-        #if rew <-50: rew = -1
+        if rew <-50: rew = -1
             #self.out_flag = True
-        #if rew > 50:rew = 1
+        if rew > 50:rew = 1
 
         return rew
     
@@ -809,15 +809,15 @@ class Gazebo_env():
             # calculate vel,Theta
             # RPY is extrinsic XYZ euler angle, equal to instrinsic ZYX euler angle
             #Theta = Rotation.from_quat(quat).as_euler('ZYX')
-            vel = linear_raw
-            """   vel = (self.pos - self.last_pos) * \
-                self.mocap_freq  # equal to divide it with dt """
-            #rot_last_q = Rotation.from_quat(self.last_quat)
-            #rot_q = Rotation.from_quat(self.quat)
-            #rot_delta = rot_last_q.inv() * rot_q
-            #omega_b = rot_delta.as_rotvec() * self.mocap_freq
+            #vel = linear_raw
+            vel = (self.pos - self.last_pos) * \
+                self.mocap_freq  # equal to divide it with dt
+            rot_last_q = Rotation.from_quat(self.last_quat)
+            rot_q = Rotation.from_quat(self.quat)
+            rot_delta = rot_last_q.inv() * rot_q
+            omega_b = rot_delta.as_rotvec() * self.mocap_freq
             rot = Rotation.from_quat(quat).as_matrix()
-            omega_b = angular_raw
+            #omega_b = angular_raw
             # update state
             self.last_state_ang = self.state_ang
             self.last_state_pos = self.state_pos

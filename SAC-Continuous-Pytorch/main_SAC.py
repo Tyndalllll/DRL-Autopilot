@@ -51,7 +51,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--learning_rate', default=0.0001, type=float)
     parser.add_argument('--episodes', default=5000, type=int)
-    parser.add_argument("--max_steps", type=int, default=5000, help="maximum max_steps length")  # 每个episode的步数为400步
+    parser.add_argument("--max_steps", type=int, default=400, help="maximum max_steps length")  # 每个episode的步数为400步
     parser.add_argument('--saveData_dir', default="./save/UAV_target",
                         help="directory to store all experiment data_BCQ")
     parser.add_argument('--saveModel_dir', default='./save/UAV_target',
@@ -91,6 +91,7 @@ def main():
     print(args)
     
     for train_count in range(1):
+        #print("start")
         env = Gazebo_env(None,None)
         max_steps = args.max_steps  # max_steps per episode
         assert isinstance(env.observation_space, Box), "observation space must be continuous"
