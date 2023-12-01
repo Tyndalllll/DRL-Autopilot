@@ -45,8 +45,8 @@ export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:~/path_to_plugins_files/plugins/build
             每个episode之前的初始化，第一次飞行时，在(0 0 2)起飞，随后每次在范围里随机取一个点，返回一个初始状态
         2. 开始训练　5000个step:(每个step大概0.015s)
             1. if replay_buffer.size < 512:  
-                action = env.action_space.sample()
-               else:
+                action = env.action_space.sample()\
+               else:\
                  action = agent.select_action(state,deterministic=False, with_logprob=False)
             2. env.step
                 限制action范围并发布0.1s，归一化状态并计算奖励，得到下一时刻的状态，并存进buffer
